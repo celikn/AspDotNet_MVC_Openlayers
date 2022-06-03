@@ -1,0 +1,159 @@
+﻿<link rel="stylesheet" href="https://openlayers.org/en/v6.3.1/css/ol.css" type="text/css">
+
+<script src="https://openlayers.org/en/v6.3.1/build/ol.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.6.1/proj4.js"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<!-- ol-layerswitcher -->
+<script src="https://unpkg.com/ol-layerswitcher@3.5.0"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/ol-layerswitcher@3.5.0/src/ol-layerswitcher.css" />
+
+<link href="https://unpkg.com/ol-geocoder/dist/ol-geocoder.min.css" rel="stylesheet">
+
+<script src="https://unpkg.com/ol-geocoder"></script>
+<script src='https://npmcdn.com/@@turf/turf/turf.min.js'></script>
+
+
+
+
+<div>
+    <div id="map" class="map" style="height:550px; width:100%">
+    </div>
+</div>
+<script>
+
+      var bingKey =BingKey  // big key eklemeyi unutma .)
+
+      // Map initialization
+      var map = new ol.Map({
+        layers: [
+          new ol.layer.Tile({
+            source: new ol.source.OSM()
+          })
+        ],
+
+        target: 'map',
+
+        view: new ol.View({
+          center: [0, 0],
+          zoom: 2
+        })
+      });
+
+      // Base layer group for map
+      var basedGroup = new ol.layer.Group({
+        // A layer must have a title to appear in the layerswitcher
+        title: 'Base maps',
+        layers: [
+          new ol.layer.Tile({
+            title: 'OSM',
+            type: 'base',
+            visible: true,
+            source: new ol.source.OSM()
+          }),
+          new ol.layer.Tile({
+            title: 'BingMap',
+            type: 'base',
+            preload: Infinity,
+            source: new ol.source.BingMaps({
+              key: bingKey,
+              imagerySet: 'Aerial'
+
+            }),
+          }),
+        ]
+      })
+
+      var overLayesGroup = new ol.layer.Group({
+        // A layer must have a title to appear in the layerswitcher
+        title: 'Overlays',
+        // Adding a 'fold' property set to either 'open' or 'close' makes the group layer
+        // collapsible
+        fold: 'open',
+        layers: []
+      })
+
+      map.addLayer(basedGroup)
+      //map.addLayer(overLayesGroup)
+
+
+      // Layer Switcher initialization
+      var layerSwitcher = new ol.control.LayerSwitcher({
+        tipLabel: 'Legand', // Optional label for button
+        groupSelectStyle: 'children' // Can be 'children' [default], 'group' or 'none'
+      });
+      map.addControl(layerSwitcher);
+      layerSwitcher.showPanel();
+
+
+
+
+
+      // -----------------------------Layers for--------------------------
+      // Add Group Layer for Adana
+      var dataGroup = new ol.layer.Group({
+        layers: [],
+        title: ' Veri Katmanları',
+      });
+
+      map.addLayer(dataGroup);
+
+
+
+
+
+      var extent = map.getView().calculateExtent();
+      var extent4326 = ol.proj.transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
+
+      var points = turf.random.randomPoint(10000, {
+                  bbox: extent4326
+      });
+
+
+    var vectorSource = new ol.source.Vector({
+     
+    });
+
+    var vectorLayer = new ol.layer.Vector({
+        source: vectorSource,
+        title:"Points"
+    });
+
+
+     let format = new ol.format.GeoJSON({
+            featureProjection:"EPSG:3857",
+     });
+     
+     vectorLayer.getSource().addFeatures(format.readFeatures(points)); // Don't needed to parse here
+
+     dataGroup.getLayers().push(vectorLayer);
+
+
+     layerSwitcher.renderPanel()
+
+
+
+
+</script>
+
+<style>
+
+    .map .ol-custom-overviewmap,
+    .map .ol-custom-overviewmap.ol-uncollapsible {
+        bottom: 0;
+        left: auto;
+        right: 0;
+        top: auto;
+    }
+
+    td {
+        border-top: 1px solid #000000;
+        border-bottom: 1px solid #000000;
+        border-left: 1px solid #000000;
+        border-right: 1px solid #000000
+    }
+
+</style>
